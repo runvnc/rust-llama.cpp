@@ -69,9 +69,11 @@ fn compile_cuda(cxx_flags: &str) {
         ("LLAMA_CUDA_DMMV_X=32", "-DGGML_CUDA_DMMV_X"),
         ("LLAMA_CUDA_DMMV_Y=1", "-DGGML_CUDA_DMMV_Y"),
         ("LLAMA_CUDA_KQUANTS_ITER=2", "-DK_QUANTS_PER_ITERATION"),
+        ("LLAMA_CUBLAS=1", "-DLLAMA_CUBLAS"),
+        ("LLAMA_CUDA_DOCKER_ARCH=all", "-DCUDA_DOCKER_ARCH")
     ];
 
-    let nvcc_flags = "--forward-unknown-to-host-compiler -arch=native ";
+    let nvcc_flags = "--forward-unknown-to-host-compiler -arch=all ";
 
     for nvcc_flag in nvcc_flags.split_whitespace() {
         nvcc.flag(nvcc_flag);
