@@ -66,9 +66,11 @@ fn compile_cuda(cxx_flags: &str) {
     let mut nvcc = cc::Build::new();
 
     let env_flags = vec![
-        ("LLAMA_CUDA_DMMV_X=32", "-DGGML_CUDA_DMMV_X"),
-        ("LLAMA_CUDA_DMMV_Y=1", "-DGGML_CUDA_DMMV_Y"),
+        ("LLAMA_CUDA_DMMV_X=64", "-DGGML_CUDA_DMMV_X"),
+        ("LLAMA_CUDA_FORCE_DMMV=true", "-DFORCE_DMMV"),
+        ("LLAMA_CUDA_DMMV_Y=4", "-DGGML_CUDA_DMMV_Y"),
         ("LLAMA_CUDA_KQUANTS_ITER=2", "-DK_QUANTS_PER_ITERATION"),
+        ("LLAMA_CUDA_F16=true", "-DCUDA_F16"),
         ("LLAMA_CUBLAS=1", "-DLLAMA_CUBLAS"),
         ("LLAMA_CUDA_DOCKER_ARCH=all", "-DCUDA_DOCKER_ARCH")
     ];
