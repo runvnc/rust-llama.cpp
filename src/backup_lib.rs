@@ -19,9 +19,6 @@ lazy_static! {
         Mutex::new(HashMap::new());
 }
 
-unsafe impl Send for LLama {}
-unsafe impl Sync for LLama {}
-
 #[derive(Debug, Clone)]
 pub struct LLama {
     state: *mut c_void,
