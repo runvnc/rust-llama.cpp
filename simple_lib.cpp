@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+
 class LlamaCppSimple {
   public:
   LlamaCppSimple(const std::string& path, int context=2048, int gpuLayers=20, int seed=777) :
@@ -18,12 +19,8 @@ class LlamaCppSimple {
 
   int generateText(const std::string& prompt, int totalTokens) {
     llama_batch batch;
-    //printf("\nTop of generateText\n");
-    //fflush(stdout);
     
     initAndPredictFirstToken(prompt, totalTokens, batch);
-    //printf("\n1\n");
-    //fflush(stdout);
  
     llama_token selectedToken = 0;
     int currentTokenIndex = batch.n_tokens;
@@ -32,35 +29,19 @@ class LlamaCppSimple {
     bool predictedEnd = false;
 
     do {
-      //printf("a ");
-      //fflush(stdout);
- 
       selectedToken = bestFromLastDecode(batch);
-      //printf("b ");
-      //fflush(stdout);
  
       predictedEnd = (selectedToken == endOfSequence);
       if (!predictedEnd) {
-        //printf("c");
-        //fflush(stdout);
-  
         outputSingleTokenAsString(selectedToken);
-        //printf("d ");
-        //fflush(stdout);
  
         llama_batch_clear(batch);
         llama_batch_add(batch, selectedToken, currentTokenIndex, { 0 }, true);
-        //printf("e ");
-        //fflush(stdout);
   
         decodeToNextTokenScores(batch);
-        //printf("f ");
-        //fflush(stdout);
       }
       currentTokenIndex++;
     } while (!predictedEnd && currentTokenIndex < totalTokens);
-    //printf("g\n");
-    //fflush(stdout);
  
     llama_batch_free(batch);
 
@@ -104,8 +85,6 @@ class LlamaCppSimple {
     const int n_ctx    = llama_n_ctx(currentContext);
     const int n_kv_req = tokens_list.size() + (totalTokens - tokens_list.size());
 
-    //LOG_TEE("\n%s: n_len = %d, n_ctx = %d, n_kv_req = %d\n", __func__, n_len, n_ctx, n_kv_req);
-
     // make sure the KV cache is big enough to hold all the prompt and generated tokens
     if (n_kv_req > n_ctx) {
         throw std::runtime_error("Error: input overran context length.");
@@ -113,15 +92,16 @@ class LlamaCppSimple {
   }
 
   inline void outputSingleTokenAsString(llama_token& token) {
-    printf("%s", llama_token_to_piece(currentContext, token).c_str());
-    fflush(stdout);
+    char* str = llama_token_to_piece(currentContext, token).c_str();
+    tokenCallback(str);
   }
 
   inline void outputTokensAsString(const std::vector<llama_token>& tokens) {
     for (auto id : tokens) {
-        printf("%s", llama_token_to_piece(currentContext, id).c_str());
+      char* str = llama_token_to_piece(currentContext, id).c_str();
+      tokenCallback(str);    
+      //printf("%s", llama_token_to_piece(currentContext, id).c_str());
     }
-    fflush(stdout);
   }
 
   inline void initAndPredictFirstToken(const std::string& prompt, int totalTokens, llama_batch& batch) {
@@ -185,31 +165,7 @@ class LlamaCppSimple {
   int contextTokenLen, randSeed;
 };
 
-
-int main(int /* argc */, char ** argv) {
-    auto modelFile = argv[1];
-    auto llamaCpp = new LlamaCppSimple(modelFile);
-
-    printf("Loaded and initialized model.\n");
-
-    auto prompt = argv[2];
-    const auto start = ggml_time_us();
-
-    auto numGeneratedTokens = llamaCpp->generateText(prompt, 32);
-
-    const auto end = ggml_time_us();
-
-    LOG_TEE("%s: decoded %d tokens in %.2f s, speed: %.2f t/s\n",
-            __func__, numGeneratedTokens, (end - start) / 1000000.0f, numGeneratedTokens / ((end - start) / 1000000.0f));
-
-    /*
-    const auto start2 = ggml_time_us();
-    auto numGeneratedTokens2 = llamaCpp->generateText("The full moon in the crisp night, ", 32);
-    const auto end2 = ggml_time_us();
-
-    LOG_TEE("%s: decoded %d tokens in %.2f s, speed: %.2f t/s\n",
-            __func__, numGeneratedTokens2, (end2 - start2) / 1000000.0f, numGeneratedTokens2 / ((end2 - start2) / 1000000.0f));
-    */
-
-    return 0;
+void tokenCallback(char* str) {
+  printf(str);
+  fflush(stdout);
 }
