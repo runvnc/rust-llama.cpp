@@ -12,11 +12,11 @@ void printStr(const char*);
 
 class LlamaCppSimple {
   public:
-  LlamaCppSimple(const std::string& path, int context=2048, int gpuLayers=20, int seed=777) :
+  LlamaCppSimple(const std::string& path, int context=2048, int gpuLayers=20, int threads=4, int seed=777) :
     modelPath(path), contextTokenLen(context), randSeed(seed)
   {
     llama_backend_init(gptParams.numa);
-    loadModel(gpuLayers);
+    loadModel(gpuLayers, threads);
  }
 
   int generateText(const std::string& prompt, int totalTokens, callback cb) {
@@ -54,8 +54,9 @@ class LlamaCppSimple {
 
   private:
 
-  void loadModel(int gpuLayers) {
+  void loadModel(int gpuLayers, int threads) {
     gptParams.model = modelPath;
+    gptParams.n_threads = threads;
     modelParams = llama_model_default_params();
 
     modelParams.n_gpu_layers = gpuLayers;
@@ -176,7 +177,7 @@ void printStr(const char* str) {
 
 int main(int /* argc */, char ** argv) {
     auto modelFile = argv[1];
-    auto llamaCpp = new LlamaCppSimple(modelFile);
+    auto llamaCpp = new LlamaCppSimple(modelFile, 2048, 1);
 
     const auto start = ggml_time_us();
 
