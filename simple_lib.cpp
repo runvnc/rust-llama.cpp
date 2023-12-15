@@ -18,10 +18,8 @@ class LlamaCppSimple {
 
   public:
 
-  int generateText(const std::string& prompt) { //, callback) {
-    const int totalTokens = 32;
-  
-    auto batch = initAndPredictFirstToken(prompt);
+  int generateText(const std::string& prompt, int totalTokens) {
+    auto batch = initAndPredictFirstToken(prompt, totalTokens);
 
     llama_token selectedToken = 0;
     int numGeneratedTokens = 0;
@@ -32,7 +30,7 @@ class LlamaCppSimple {
       selectedToken = bestFromLastDecode(batch);
       predictedEnd = (selectedToken == endOfSequence);
       if (!predictedEnd) {
-        outputString([selectedToken])
+        outputSingleTokenAsString(selectedToken);
 
         llama_batch_clear(batch);
         llama_batch_add(batch, selectedToken, numGeneratedTokens, { 0 }, true);
@@ -78,7 +76,7 @@ class LlamaCppSimple {
     }
   }
 
-  auto tokenize(const std::string& inputString, int totalTokens) {
+  std::vector<llama_token>& tokenize(const std::string& inputString, int totalTokens) {
     std::vector<llama_token> tokens_list;
     tokens_list = llama_tokenize(currentContext, inputString, true);
 
@@ -94,7 +92,11 @@ class LlamaCppSimple {
     return tokens_list;
   }
 
-  void outputString(const std::vector<llama_token>& tokens) {
+  inline void outputSingleTokenAsString(llama_token& token) {
+    fprintf(stderr, "%s", llama_token_to_piece(currentContext, token).c_str());
+  }
+
+  inline void outputTokensAsString(const std::vector<llama_token>& tokens) {
     for (auto id : tokens) {
         fprintf(stderr, "%s", llama_token_to_piece(currentContext, id).c_str());
     }
@@ -103,7 +105,7 @@ class LlamaCppSimple {
 
   llama_batch& initAndPredictFirstToken(const std::string& prompt, int totalTokens) {
     auto promptTokens = tokenize(prompt, totalTokens);
-    outputString(promptTokens);
+    outputTokensAsString(promptTokens);
 
     llama_batch batch = llama_batch_init(512, 0, 1);
 
@@ -123,7 +125,7 @@ class LlamaCppSimple {
 
   inline llama_token bestFromLastDecode(llama_batch& batch) {
     int numTokensInVocabulary = llama_n_vocab(model);
-    auto* tokenLikelihoodScores  = llama_get_logits_ith(currentContext, batch->n_tokens - 1);
+    auto* tokenLikelihoodScores  = llama_get_logits_ith(currentContext, batch.n_tokens - 1);
 
     std::vector<llama_token_data> candidates;
     candidates.reserve(numTokensInVocabulary);
@@ -145,7 +147,7 @@ class LlamaCppSimple {
         fprintf(stderr, "%s : failed to eval, return code %d\n", __func__, 1);
         throw std::runtime_error("Error 1313: input exceeded context length.");
     }
-  };
+  }
 
   ~LlamaCppSimple() {
     llama_free(currentContext);
@@ -156,6 +158,7 @@ class LlamaCppSimple {
 
   llama_model_params modelParams;
   llama_model* model;
+  int gpuLayers;
   gpt_params gptParams;
   std::string modelPath;
   llama_context* currentContext;
@@ -169,7 +172,7 @@ int main(int argc, char ** argv) {
 
     const auto start = ggml_time_us();
 
-    auto numGeneratedTokens = llamaCpp.generateText("It was the best of times, ");
+    auto numGeneratedTokens = llamaCpp.generateText("It was the best of times, ", 32);
 
     const auto end = ggml_time_us();
 
