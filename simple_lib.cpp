@@ -8,26 +8,27 @@
 
 class LlamaCppSimple {
 
-  constructor(path, context=2048, offloadLayers=20, seed=777) :
+  LlamaCppSimple(const std::string& path, int context=2048, int offloadLayers=20, int seed=777) :
     modelPath(path), contextTokenLen(context), gpuLayers(offloadLayers), randSeed(seed)
   {
     llama_backend_init(gptParams.numa);
-    load_model(modelPath, gpuLayers); 
+    load_model(modelPath, gpuLayers);
     initContext();
   }
 
   public:
 
-  generateText(string prompt) { //, callback) {
-    batch = initAndPredictFirstToken(prompt);
+  std::string generateText(const std::string& prompt) { //, callback) {
+    auto batch = initAndPredictFirstToken(prompt);
 
-    auto selectedToken = 0, numGeneratedTokens = 0;
-    auto endOfSequence = llama_token_eos(model);
-    auto predictedEnd = false;
+    llama_token selectedToken = 0;
+    int numGeneratedTokens = 0;
+    llama_token endOfSequence = llama_token_eos(model);
+    bool predictedEnd = false;
 
     do {
-      predictedToken = bestFromLastDecode(&batch);
-      predictedEnd = (selectedToken == endOfSequence); 
+      selectedToken = bestFromLastDecode(&batch);
+      predictedEnd = (selectedToken == endOfSequence);
       if (!predictedEnd) {
         outputString([predictedToken])
 
@@ -38,7 +39,7 @@ class LlamaCppSimple {
       }
       numGeneratedTokens++;
     } while (!predictedEnd && numGeneratedTokens < totalTokens)
-    
+
     llama_batch_free(batch);
 
     return numGeneratedTokens;
@@ -46,13 +47,13 @@ class LlamaCppSimple {
 
   private:
 
-  loadModel(path) {
+  void loadModel(const std::string& path) {
     params.model = modelPath;
     modelParams = llama_model_default_params();
 
     modelParams.n_gpu_layers = gpuLayers;
 
-    model = llama_load_model_from_file(params.model.c_str(), modelParams);          
+    model = llama_load_model_from_file(params.model.c_str(), modelParams);
 
     if (model == NULL) {
         fprintf(stderr , "%s: error: unable to load model\n" , __func__);
@@ -75,7 +76,7 @@ class LlamaCppSimple {
     }
   }
 
-  tokenize(inputString) {
+  void tokenize(const std::string& inputString) {
     std::vector<llama_token> tokens_list;
     tokens_list = llama_tokenize(currentContext, inputString, true);
 
@@ -90,16 +91,16 @@ class LlamaCppSimple {
     }
   }
 
-  outputString(tokens) {
+  void outputString(const std::vector<llama_token>& tokens) {
     for (auto id : tokens) {
         fprintf(stderr, "%s", llama_token_to_piece(currentContext, id).c_str());
     }
     fflush(stdout);
   }
 
-  initAndPredictFirstToken(prompt) {
+  llama_batch initAndPredictFirstToken(const std::string& prompt) {
     const int totalTokens = 32;
-    let promptTokens = tokenize(prompt);
+    auto promptTokens = tokenize(prompt);
     outputString(promptTokens);
 
     llama_batch batch = llama_batch_init(512, 0, 1);
@@ -118,9 +119,9 @@ class LlamaCppSimple {
     return batch
   }
 
-  inline bestFromLastDecode(*batch) {
-    auto   numTokensInVocabulary = llama_n_vocab(model);
-    auto * tokenLikelihoodScores  = llama_get_logits_ith(currentContext, batch.n_tokens - 1);
+  inline llama_token bestFromLastDecode(llama_batch* batch) {
+    int numTokensInVocabulary = llama_n_vocab(model);
+    auto* tokenLikelihoodScores  = llama_get_logits_ith(currentContext, batch->n_tokens - 1);
 
     std::vector<llama_token_data> candidates;
     candidates.reserve(n_vocab);
@@ -136,7 +137,7 @@ class LlamaCppSimple {
     return highestScoringToken;
   }
 
-  inline decodeToNextTokenScores(&batch) {
+  inline void decodeToNextTokenScores(llama_batch* batch) {
     // evaluate the current batch with the transformer model
     if (llama_decode(currentContext, batch)) {
         fprintf(stderr, "%s : failed to eval, return code %d\n", __func__, 1);
@@ -149,7 +150,7 @@ class LlamaCppSimple {
     llama_free_model(model);
 
     llama_backend_free();
-  } 
+  }
 
   llama_model_params modelParams;
   llama_model* model;
