@@ -7,19 +7,18 @@
 #include <vector>
 
 class LlamaCppSimple {
-
-  LlamaCppSimple(const std::string& path, int context=2048, int offloadLayers=20, int seed=777) :
-    modelPath(path), contextTokenLen(context), gpuLayers(offloadLayers), randSeed(seed)
+  public:
+  LlamaCppSimple(const std::string& path, int context=2048, int gpuLayers=20, int seed=777) :
+    modelPath(path), contextTokenLen(context), randSeed(seed)
   {
     llama_backend_init(gptParams.numa);
-    loadModel();
+    loadModel(gpuLayers);
     initContext();
   }
 
-  public:
-
   int generateText(const std::string& prompt, int totalTokens) {
-    auto batch = initAndPredictFirstToken(prompt, totalTokens);
+    llama_batch batch;
+    initAndPredictFirstToken(prompt, totalTokens, batch);
 
     llama_token selectedToken = 0;
     int numGeneratedTokens = 0;
@@ -47,7 +46,7 @@ class LlamaCppSimple {
 
   private:
 
-  void loadModel() {
+  void loadModel(int gpuLayers) {
     gptParams.model = modelPath;
     modelParams = llama_model_default_params();
 
@@ -76,8 +75,7 @@ class LlamaCppSimple {
     }
   }
 
-  std::vector<llama_token>& tokenize(const std::string& inputString, int totalTokens) {
-    std::vector<llama_token> tokens_list;
+  inline void tokenize(const std::string& inputString, int totalTokens, std::vector<llama_token>& tokens_list) {
     tokens_list = llama_tokenize(currentContext, inputString, true);
 
     const int n_ctx    = llama_n_ctx(currentContext);
@@ -89,7 +87,6 @@ class LlamaCppSimple {
     if (n_kv_req > n_ctx) {
         throw std::runtime_error("Error: input overran context length.");
     }
-    return tokens_list;
   }
 
   inline void outputSingleTokenAsString(llama_token& token) {
@@ -103,11 +100,12 @@ class LlamaCppSimple {
     fflush(stdout);
   }
 
-  llama_batch& initAndPredictFirstToken(const std::string& prompt, int totalTokens) {
-    auto promptTokens = tokenize(prompt, totalTokens);
+  inline void initAndPredictFirstToken(const std::string& prompt, int totalTokens, llama_batch& batch) {
+    std::vector<llama_token> promptTokens;
+    tokenize(prompt, totalTokens, promptTokens);
     outputTokensAsString(promptTokens);
 
-    llama_batch batch = llama_batch_init(512, 0, 1);
+    batch = llama_batch_init(512, 0, 1);
 
     for (size_t i = 0; i < promptTokens.size(); i++) {
         llama_batch_add(batch, promptTokens[i], i, { 0 }, false);
@@ -120,7 +118,6 @@ class LlamaCppSimple {
         LOG_TEE("%s: llama_decode() failed\n", __func__);
         throw std::runtime_error("llama_decode() failed");
     }
-    return batch;
   }
 
   inline llama_token bestFromLastDecode(llama_batch& batch) {
@@ -155,10 +152,9 @@ class LlamaCppSimple {
 
     llama_backend_free();
   }
-
-  llama_model_params modelParams;
+  
   llama_model* model;
-  int gpuLayers;
+  llama_model_params modelParams;
   gpt_params gptParams;
   std::string modelPath;
   llama_context* currentContext;
@@ -166,13 +162,13 @@ class LlamaCppSimple {
 };
 
 
-int main(int argc, char ** argv) {
+int main(int /* argc */, char ** argv) {
     auto modelFile = argv[1];
-    auto llamaCpp = new LLamaCppSimple(modelFile);
+    auto llamaCpp = new LlamaCppSimple(modelFile);
 
     const auto start = ggml_time_us();
 
-    auto numGeneratedTokens = llamaCpp.generateText("It was the best of times, ", 32);
+    auto numGeneratedTokens = llamaCpp->generateText("It was the best of times, ", 32);
 
     const auto end = ggml_time_us();
 
