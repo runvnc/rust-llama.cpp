@@ -158,6 +158,7 @@ fn main() {
 
     compile_bindings(&out_path);
 
+    /*
     let mut cx_flags = String::from("");
     let mut cxx_flags = String::from("");
 
@@ -215,4 +216,5 @@ fn main() {
 
         compile_llama(&mut cxx, &cxx_flags, &out_path, &ggml_type);
     }
+    */
 }
