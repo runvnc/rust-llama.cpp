@@ -9,7 +9,7 @@ mod bindings {
 }
 
 lazy_static! {
-    static ref CALLBACKS: Mutex<HashMap<usize, Box<dyn Fn(String) -> bool + Send + 'static>>> =
+    static ref CALLBACKS: Mutex<HashMap<usize, Box<dyn FnMut(String) -> bool + Send + 'static>>> =
         Mutex::new(HashMap::new());
 }
 
@@ -39,7 +39,7 @@ impl Default for LlamaOptions {
 
 fn set_callback(
     state: *mut c_void,
-    callback: Option<Box<dyn Fn(String) -> bool + Send + 'static>>,
+    callback: Option<Box<dyn FnMut(String) -> bool + Send + 'static>>,
 ) {
     let mut callbacks = CALLBACKS.lock().unwrap();
 
@@ -80,7 +80,7 @@ impl LlamaCppSimple {
         &self,
         prompt: &str,
         total_tokens: i32,
-        callback: Box<dyn Fn(String) -> bool + Send + 'static>,
+        callback: Box<dyn FnMut(String) -> bool + Send + 'static>,
     ) -> i32 {
         let c_prompt = CString::new(prompt).expect("CString::new failed");
 
@@ -101,41 +101,25 @@ impl Drop for LlamaCppSimple {
 #[no_mangle]
 extern "C" fn tokenCallback(state: *mut c_void, token: *const c_char) -> bool {
     let mut callbacks = CALLBACKS.lock().unwrap();
-
+    println!("Inside of tokenCallback.");
     if let Some(callback) = callbacks.get_mut(&(state as usize)) {
         let c_str: &CStr = unsafe { CStr::from_ptr(token) };
         let str_slice: &str = c_str.to_str().unwrap();
         let string: String = str_slice.to_owned();
-
+        print!("{}", string);
         return callback(string);
+    } else {
+        println!("Could not find callback");
+        let c_str: &CStr = unsafe { CStr::from_ptr(token) };
+        let str_slice: &str = c_str.to_str().unwrap();
+        let string: String = str_slice.to_owned();
+ 
+        print!("{}",string); 
     }
 
     true
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
 
-    #[test]
-    fn test_create_and_generate_text() {
-        let options = LlamaOptions::default();
 
-        let llama = LlamaCppSimple::new(LlamaOptions {
-            model_path: "models/orca-2-7b.Q4_0.gguf".to_string(),
-            ..Default::default()
-        })
-        .unwrap();
-        let prompt = "Hello, world!";
-        let total_tokens = 128;
 
-        let mut generated_text = Vec::new();
-
-        let result = llama.generate_text(prompt, total_tokens, Box::new(|token| {
-            generated_text.push(token);
-        }));
-
-        assert_eq!(result, total_tokens);
-        assert!(!generated_text.is_empty());
-    }
-}

@@ -191,8 +191,8 @@ void llama_destroy(LlamaCppSimple* instance) {
     delete instance;
 }
 
-llama_context* get_context(LlamaCppSimple* instance) {
-  return instance->getContext();
+void* llama_get_context(LlamaCppSimple* instance) {
+  return (void*)(instance->getContext());
 }
 
 int llama_generate_text(LlamaCppSimple* instance, const char* prompt, int total_tokens) {
