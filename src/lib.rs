@@ -25,6 +25,10 @@ pub struct LlamaOptions {
     pub seed: i32,
 }
 
+unsafe impl Send for LLama {}
+unsafe impl Sync for LLama {}
+
+
 impl Default for LlamaOptions {
     fn default() -> Self {
         LlamaOptions {
