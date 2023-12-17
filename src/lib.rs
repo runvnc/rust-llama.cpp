@@ -29,7 +29,7 @@ impl Default for LlamaOptions {
     fn default() -> Self {
         LlamaOptions {
             model_path: "path/to/model".to_string(),
-            context: 32000,
+            context: 4096,
             gpu_layers: 20,
             threads: 4,
             seed: 777,
@@ -85,6 +85,7 @@ impl LlamaCppSimple {
         let c_prompt = CString::new(prompt).expect("CString::new failed");
 
         unsafe { set_callback(bindings::llama_get_context(self.inner), Some(callback)); }
+        //unsafe { set_callback(self.inner as *mut c_void, Some(callback)); }
 
         unsafe { bindings::llama_generate_text(self.inner, c_prompt.as_ptr(), total_tokens) }
     }
@@ -101,20 +102,13 @@ impl Drop for LlamaCppSimple {
 #[no_mangle]
 extern "C" fn tokenCallback(state: *mut c_void, token: *const c_char) -> bool {
     let mut callbacks = CALLBACKS.lock().unwrap();
-    println!("Inside of tokenCallback.");
     if let Some(callback) = callbacks.get_mut(&(state as usize)) {
         let c_str: &CStr = unsafe { CStr::from_ptr(token) };
         let str_slice: &str = c_str.to_str().unwrap();
         let string: String = str_slice.to_owned();
-        print!("{}", string);
         return callback(string);
     } else {
         println!("Could not find callback");
-        let c_str: &CStr = unsafe { CStr::from_ptr(token) };
-        let str_slice: &str = c_str.to_str().unwrap();
-        let string: String = str_slice.to_owned();
- 
-        print!("{}",string); 
     }
 
     true

@@ -17,6 +17,7 @@ class LlamaCppSimple {
   {
     llama_backend_init(gptParams.numa);
     loadModel(gpuLayers, threads);
+    initContext();
  }
 
   llama_context* getContext() {
@@ -24,7 +25,6 @@ class LlamaCppSimple {
   }
 
   int generateText(const std::string& prompt, int totalTokens) {
-    initContext();
  
     llama_batch batch;
     
@@ -109,13 +109,13 @@ class LlamaCppSimple {
 
   inline void outputSingleTokenAsString(llama_token& token) {
     const char* str = llama_token_to_piece(currentContext, token).c_str();
-    tokenCallback(currentContext, (char*)str);
+    tokenCallback((void*)currentContext, (char*)str);
   }
 
   inline void outputTokensAsString(const std::vector<llama_token>& tokens) {
     for (auto id : tokens) {
       const char* str = llama_token_to_piece(currentContext, id).c_str();
-      tokenCallback(currentContext, (char*)str);
+      tokenCallback((void*)currentContext, (char*)str);
     }
   }
 

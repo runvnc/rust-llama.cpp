@@ -10,20 +10,27 @@ fn main() {
         ..Default::default()
     })
     .unwrap();
-    let prompt = "Hello, world!";
-    let total_tokens = 128;
+    let prompt = "abcdefg";
+    let total_tokens = 15;
 
     let generated_text = Vec::new();
     let mut cloned_text = generated_text.clone();
     println!("Start.");    
     let result = llama.generate_text(prompt, total_tokens, Box::new(move |token| {
-        println!("Hello world.!");
-        println!("{}", token);
+        print!("{}", token);
         cloned_text.push(token);
         true
     }));
     println!("Done.");
+
     assert_eq!(result, total_tokens);
+
+    let result2 = llama.generate_text("12345", total_tokens, Box::new(move |token| {
+        print!("{}", token);
+        true
+    }));
+ 
+
     //assert!(!generated_text.is_empty());
 }
 
