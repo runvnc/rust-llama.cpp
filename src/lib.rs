@@ -25,8 +25,8 @@ pub struct LlamaOptions {
     pub seed: i32,
 }
 
-unsafe impl Send for LLama {}
-unsafe impl Sync for LLama {}
+unsafe impl Send for LLamaCppSimple {}
+unsafe impl Sync for LLamaCppSimple {}
 
 
 impl Default for LlamaOptions {
