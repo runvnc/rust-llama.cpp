@@ -109,11 +109,9 @@ extern "C" fn tokenCallback(state: *mut c_void, token: *const c_char) -> bool {
         return callback(string);
     } else {
         println!("Could not find callback");
+
     }
 
     true
 }
-
-
-
 

@@ -24,12 +24,14 @@ class LlamaCppSimple {
     return currentContext;
   }
 
-  int generateText(const std::string& prompt, int totalTokens) {
+  int generateText(const std::string& prompt, int maxNewTokens) {
+    //initContext();
  
     llama_batch batch;
-    
-    initAndPredictFirstToken(prompt, totalTokens, batch);
- 
+
+    int promptTokenCount = initAndPredictFirstToken(prompt, maxNewTokens, batch);
+    int totalTokens = promptTokenCount + maxNewTokens;
+
     llama_token selectedToken = 0;
     int currentTokenIndex = batch.n_tokens;
  
@@ -119,9 +121,11 @@ class LlamaCppSimple {
     }
   }
 
-  inline void initAndPredictFirstToken(const std::string& prompt, int totalTokens, llama_batch& batch) {
+  inline int initAndPredictFirstToken(const std::string& prompt, int maxNewTokens, llama_batch& batch) {
     std::vector<llama_token> promptTokens;
-    tokenize(prompt, totalTokens, promptTokens);
+    tokenize(prompt, contextTokenLen, promptTokens);
+    //tokenize(prompt, totalTokens, promptTokens);
+
     outputTokensAsString(promptTokens);
 
     batch = llama_batch_init(512, 0, 1);
@@ -137,6 +141,7 @@ class LlamaCppSimple {
         LOG_TEE("%s: llama_decode() failed\n", __func__);
         throw std::runtime_error("llama_decode() failed");
     }
+    return promptTokens.size();
   }
 
   inline llama_token bestFromLastDecode(llama_batch& batch) {

@@ -7,7 +7,7 @@ extern "C" {
 
 
 
-extern unsigned char tokenCallback(void *, char *);
+extern unsigned int tokenCallback(void *, char *);
 
 
 //typedef void (*callback)(const char*);
