@@ -248,6 +248,7 @@ dependencies = [
  "cc",
  "futures",
  "lazy_static",
+ "libc",
  "tokio",
 ]
 

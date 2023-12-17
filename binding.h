@@ -5,7 +5,12 @@
 extern "C" {
 #endif
 
-typedef void (*callback)(const char*);
+
+
+extern unsigned char tokenCallback(void *, char *);
+
+
+//typedef void (*callback)(const char*);
 
 // Forward declaration of the C++ class
 #ifdef __cplusplus
@@ -17,7 +22,8 @@ typedef struct LlamaCppSimple LlamaCppSimple;
 // C-compatible function declarations
 LlamaCppSimple* llama_create(const char* model_path, int context, int gpu_layers, int threads, int seed);
 void llama_destroy(LlamaCppSimple* instance);
-int llama_generate_text(LlamaCppSimple* instance, const char* prompt, int total_tokens, callback cb);
+void* llama_get_context(LlamaCppSimple* instance);
+int llama_generate_text(LlamaCppSimple* instance, const char* prompt, int total_tokens);
 
 #ifdef __cplusplus
 }

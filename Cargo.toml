@@ -1,5 +1,5 @@
 [package]
-authors = ["mdrokz <mohammadmunshi@gmail.com>"]
+authors = ["mdrokz <mohammadmunshi@gmail.com>", "runvnc <runvnc@gmail.com>"]
 name = "llama_cpp_rs"
 description = "Rust bindings for LLAMA.CPP inference"
 categories = [
@@ -28,6 +28,7 @@ edition = "2021"
 futures = "0.3.29"
 lazy_static = "1.4.0"
 tokio = { version = "1.35.0", features = ["rt", "rt-multi-thread"] }
+libc = "0.2"
 
 [build-dependencies]
 cc = "1.0.79"

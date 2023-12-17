@@ -14,6 +14,10 @@ fn compile_bindings(out_path: &PathBuf) {
     bindings
         .write_to_file(&out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");
+    println!(
+        "Wrote bindings to {}",
+        &out_path.join("bindings.rs").display()
+    );
 }
 
 fn compile_opencl(cx: &mut Build, cxx: &mut Build) {
@@ -72,7 +76,7 @@ fn compile_cuda(cxx_flags: &str) {
         ("LLAMA_CUDA_KQUANTS_ITER=2", "-DK_QUANTS_PER_ITERATION"),
         ("LLAMA_CUDA_F16=true", "-DCUDA_F16"),
         ("LLAMA_CUBLAS=1", "-DLLAMA_CUBLAS"),
-        ("LLAMA_CUDA_DOCKER_ARCH=all", "-DCUDA_DOCKER_ARCH")
+        ("LLAMA_CUDA_DOCKER_ARCH=all", "-DCUDA_DOCKER_ARCH"),
     ];
 
     let nvcc_flags = "--forward-unknown-to-host-compiler -arch=all ";
@@ -110,10 +114,10 @@ fn compile_ggml(cx: &mut Build, cx_flags: &str) {
         .file("./llama.cpp/ggml.c")
         .file("./llama.cpp/ggml-alloc.c")
         .file("./llama.cpp/ggml-backend.c")
-	    .file("./llama.cpp/ggml-quants.c")
+        .file("./llama.cpp/ggml-quants.c")
         .cpp(false)
-	.define("_GNU_SOURCE", None)
-	.define("GGML_USE_K_QUANTS", None)
+        .define("_GNU_SOURCE", None)
+        .define("GGML_USE_K_QUANTS", None)
         .compile("ggml");
 }
 
@@ -157,8 +161,6 @@ fn main() {
     let out_path = PathBuf::from(env::var("OUT_DIR").expect("No out dir found"));
 
     compile_bindings(&out_path);
-
-    /*
     let mut cx_flags = String::from("");
     let mut cxx_flags = String::from("");
 
@@ -178,7 +180,9 @@ fn main() {
 
     let mut ggml_type = String::new();
 
-    cxx.include("./llama.cpp/common").include("./llama.cpp").include("./include_shims");
+    cxx.include("./llama.cpp/common")
+        .include("./llama.cpp")
+        .include("./include_shims");
 
     if cfg!(feature = "opencl") {
         compile_opencl(&mut cx, &mut cxx);
@@ -216,5 +220,4 @@ fn main() {
 
         compile_llama(&mut cxx, &cxx_flags, &out_path, &ggml_type);
     }
-    */
 }
