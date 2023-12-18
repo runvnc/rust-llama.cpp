@@ -32,6 +32,12 @@ class LlamaCppSimple {
     int promptTokenCount = initAndPredictFirstToken(prompt, maxNewTokens, batch);
     int totalTokens = promptTokenCount + maxNewTokens;
 
+    if (totalTokens > contextTokenLen) {
+        fprintf(stderr , "%s: error: total tokens exceeds context length\n" , __func__);
+        throw std::runtime_error("error: total tokens exceeds context length.");
+ 
+    }
+
     llama_token selectedToken = 0;
     int currentTokenIndex = batch.n_tokens;
  
