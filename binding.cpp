@@ -149,6 +149,7 @@ class LlamaCppSimple {
     batch = llama_batch_init(512, 0, 1);
 
     fprintf(stderr, "c\n");
+    fprintf(stderr, "Prompt tokens len: %d\n", promptTokens.size());
 
     for (size_t i = 0; i < promptTokens.size(); i++) {
         llama_batch_add(batch, promptTokens[i], i, { 0 }, false);
