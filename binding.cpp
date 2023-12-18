@@ -28,14 +28,14 @@ class LlamaCppSimple {
     //initContext();
  
     llama_batch batch;
-
+    fprintf(stderr, "top of generateText\n");
+    
     int promptTokenCount = initAndPredictFirstToken(prompt, maxNewTokens, batch);
     int totalTokens = promptTokenCount + maxNewTokens;
 
     if (totalTokens > contextTokenLen) {
         fprintf(stderr , "%s: error: total tokens exceeds context length\n" , __func__);
         throw std::runtime_error("error: total tokens exceeds context length.");
- 
     }
 
     llama_token selectedToken = 0;
@@ -44,17 +44,25 @@ class LlamaCppSimple {
     llama_token endOfSequence = llama_token_eos(model);
     bool predictedEnd = false;
 
+    fprintf(stderr, "loop begin\n");
+
     do {
+      fprintf(stderr, "2\n");
       selectedToken = bestFromLastDecode(batch);
- 
+      fprintf(stderr, "3\n");
+  
       predictedEnd = (selectedToken == endOfSequence);
       if (!predictedEnd) {
+        fprintf(stderr, "4\n");
+ 
         outputSingleTokenAsString(selectedToken);
  
         llama_batch_clear(batch);
         llama_batch_add(batch, selectedToken, currentTokenIndex, { 0 }, true);
   
         decodeToNextTokenScores(batch);
+        fprintf(stderr, "5\n");
+ 
       }
       currentTokenIndex++;
     } while (!predictedEnd && currentTokenIndex < totalTokens);
@@ -89,6 +97,8 @@ class LlamaCppSimple {
   }
 
   void initContext() {
+    fprintf(stderr, "initializing context..\n");
+    
     llama_context_params ctx_params = llama_context_default_params();
     ctx_params.seed  = randSeed;
     ctx_params.n_ctx = contextTokenLen;
@@ -132,21 +142,27 @@ class LlamaCppSimple {
     tokenize(prompt, contextTokenLen, promptTokens);
     //tokenize(prompt, totalTokens, promptTokens);
 
+    fprintf(stderr, "a\n");
     outputTokensAsString(promptTokens);
 
+    fprintf(stderr, "b\n");
     batch = llama_batch_init(512, 0, 1);
+
+    fprintf(stderr, "c\n");
 
     for (size_t i = 0; i < promptTokens.size(); i++) {
         llama_batch_add(batch, promptTokens[i], i, { 0 }, false);
     }
-
+    fprintf(stderr, "d\n");
     // llama_decode will output logits only for the last token of the prompt
     batch.logits[batch.n_tokens - 1] = true;
 
+    fprintf(stderr, "e\n");
     if (llama_decode(currentContext, batch) != 0) {
         LOG_TEE("%s: llama_decode() failed\n", __func__);
         throw std::runtime_error("llama_decode() failed");
     }
+    fprintf(stderr, "f\n");
     return promptTokens.size();
   }
 
