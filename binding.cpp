@@ -10,10 +10,11 @@ extern "C" {
 #include <string>
 #include <vector>
 
+
 class LlamaCppSimple {
   public:
-  LlamaCppSimple(const std::string& path, int context=2048, int gpuLayers=20, int threads=4, int seed=777) :
-    modelPath(path), contextTokenLen(context), randSeed(seed)
+  LlamaCppSimple(const std::string& path, int context=2048, int gpuLayers=20, int threads=4, int seed=777, batch=512) :
+    modelPath(path), contextTokenLen(context), randSeed(seed), batchSize(batch)
   {
     llama_backend_init(gptParams.numa);
     loadModel(gpuLayers, threads);
@@ -30,7 +31,7 @@ class LlamaCppSimple {
     llama_batch batch;
     fprintf(stderr, "top of generateText\n");
     
-    int promptTokenCount = initAndPredictFirstToken(prompt, maxNewTokens, batch);
+    int promptTokenCount = processPrompt(prompt, maxNewTokens, batch);
     int totalTokens = promptTokenCount + maxNewTokens;
 
     if (totalTokens > contextTokenLen) {
@@ -137,32 +138,40 @@ class LlamaCppSimple {
     }
   }
 
-  inline int initAndPredictFirstToken(const std::string& prompt, int maxNewTokens, llama_batch& batch) {
+  inline int processPrompt(const std::string& prompt, int maxNewTokens, llama_batch& batch) {
     std::vector<llama_token> promptTokens;
     tokenize(prompt, contextTokenLen, promptTokens);
-    //tokenize(prompt, totalTokens, promptTokens);
 
-    fprintf(stderr, "a\n");
-    outputTokensAsString(promptTokens);
-
-    fprintf(stderr, "b\n");
-    batch = llama_batch_init(512, 0, 1);
+    //fprintf(stderr, "a\n");
+    //outputTokensAsString(promptTokens);
 
     fprintf(stderr, "c\n");
     fprintf(stderr, "Prompt tokens len: %d\n", promptTokens.size());
 
-    for (size_t i = 0; i < promptTokens.size(); i++) {
-        llama_batch_add(batch, promptTokens[i], i, { 0 }, false);
-    }
-    fprintf(stderr, "d\n");
-    // llama_decode will output logits only for the last token of the prompt
-    batch.logits[batch.n_tokens - 1] = true;
+    int processedTokens = 0;
 
-    fprintf(stderr, "e\n");
-    if (llama_decode(currentContext, batch) != 0) {
-        LOG_TEE("%s: llama_decode() failed\n", __func__);
-        throw std::runtime_error("llama_decode() failed");
+    while (processedTokens < promptTokens.size() ) {
+      fprintf(stderr, "init batch\n");
+      batch = llama_batch_init(batchSize, 0, 1);
+      int start = processedTokens;
+
+      while (processedTokens < processedTokens + batchSize && 
+          processedTokens < promptTokens.size() ) { 
+          llama_batch_add(batch, promptTokens[processedTokens], processedTokens-start, { 0 }, false);
+          processedTokens++;
+      }
+      fprintf(stderr, "d\n");
+      // llama_decode will output logits only for the last token of the prompt
+      batch.logits[batch.n_tokens - 1] = true;
+
+      fprintf(stderr, "e\n");
+      if (llama_decode(currentContext, batch) != 0) {
+          LOG_TEE("%s: llama_decode() failed\n", __func__);
+          throw std::runtime_error("llama_decode() failed");
+      }
+
     }
+
     fprintf(stderr, "f\n");
     return promptTokens.size();
   }
@@ -186,6 +195,10 @@ class LlamaCppSimple {
   }
 
   inline void decodeToNextTokenScores(llama_batch& batch) {
+    //if (llama_decode(ctx, llama_batch_get_one(&embd[i], n_eval, n_past, 0))) {
+    //    LOG_TEE("%s : failed to eval\n", __func__);
+ 
+
     // evaluate the current batch with the transformer model
     if (llama_decode(currentContext, batch)) {
         fprintf(stderr, "%s : failed to eval, return code %d\n", __func__, 1);
@@ -199,7 +212,7 @@ class LlamaCppSimple {
   gpt_params gptParams;
   std::string modelPath;
   llama_context* currentContext;
-  int contextTokenLen, randSeed;
+  int contextTokenLen, randSeed, batchSize;
 };
 
 // Wrapper function definitions
