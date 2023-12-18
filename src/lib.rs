@@ -18,7 +18,7 @@ pub struct LlamaCppSimple {
     inner: *mut bindings::LlamaCppSimple,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LlamaOptions {
     pub model_path: String,
     pub context: i32,
