@@ -13,6 +13,7 @@ lazy_static! {
         Mutex::new(HashMap::new());
 }
 
+#[derive(Debug)]
 pub struct LlamaCppSimple {
     inner: *mut bindings::LlamaCppSimple,
 }
