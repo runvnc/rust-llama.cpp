@@ -148,6 +148,8 @@ class LlamaCppSimple {
     fprintf(stderr, "c\n");
     fprintf(stderr, "Prompt tokens len: %d\n", promptTokens.size());
 
+    fprintf(stderr, "Batch size: %d\n", batchSize);
+
     int processedTokens = 0;
 
     while (processedTokens < promptTokens.size() ) {
@@ -156,10 +158,13 @@ class LlamaCppSimple {
       int start = processedTokens;
 
       while (processedTokens < start + batchSize && 
+
           processedTokens < promptTokens.size() ) { 
           llama_batch_add(batch, promptTokens[processedTokens], processedTokens-start, { 0 }, false);
           processedTokens++;
       }
+      fprintf("processed tokens: %d", processedTokens);
+
       fprintf(stderr, "d\n");
       // llama_decode will output logits only for the last token of the prompt
       batch.logits[batch.n_tokens - 1] = true;
@@ -169,7 +174,7 @@ class LlamaCppSimple {
           LOG_TEE("%s: llama_decode() failed\n", __func__);
           throw std::runtime_error("llama_decode() failed");
       }
-
+      
     }
 
     fprintf(stderr, "f\n");
