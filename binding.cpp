@@ -13,7 +13,7 @@ extern "C" {
 
 class LlamaCppSimple {
   public:
-  LlamaCppSimple(const std::string& path, int context=2048, int gpuLayers=20, int threads=4, int seed=777, batch=512) :
+  LlamaCppSimple(const std::string& path, int context=2048, int gpuLayers=20, int threads=4, int seed=777, int batch=512) :
     modelPath(path), contextTokenLen(context), randSeed(seed), batchSize(batch)
   {
     llama_backend_init(gptParams.numa);
@@ -219,9 +219,9 @@ class LlamaCppSimple {
 
 extern "C" {
 
-LlamaCppSimple* llama_create(const char* model_path, int context, int gpu_layers, int threads, int seed) {
+LlamaCppSimple* llama_create(const char* model_path, int context, int gpu_layers, int threads, int seed, int batch) {
     try {
-        return new LlamaCppSimple(model_path, context, gpu_layers, threads, seed);
+        return new LlamaCppSimple(model_path, context, gpu_layers, threads, seed, batch);
     } catch (const std::exception& e) {
         // Handle exceptions if necessary
         return nullptr;

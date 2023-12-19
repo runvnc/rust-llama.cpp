@@ -12,6 +12,7 @@ extern "C" {
         gpu_layers: ::std::os::raw::c_int,
         threads: ::std::os::raw::c_int,
         seed: ::std::os::raw::c_int,
+        batch_size: ::std::os::raw::c_int,
     ) -> *mut LlamaCppSimple;
 }
 extern "C" {

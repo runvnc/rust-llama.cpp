@@ -25,6 +25,7 @@ pub struct LlamaOptions {
     pub gpu_layers: i32,
     pub threads: i32,
     pub seed: i32,
+    pub batch_size: i32
 }
 
 unsafe impl Send for LlamaCppSimple {}
@@ -39,6 +40,7 @@ impl Default for LlamaOptions {
             gpu_layers: 20,
             threads: 4,
             seed: 777,
+            batch_size: 32
         }
     }
 }
@@ -73,6 +75,7 @@ impl LlamaCppSimple {
                 options.gpu_layers,
                 options.threads,
                 options.seed,
+                options.batch_size
             )
         };
         if inner.is_null() {

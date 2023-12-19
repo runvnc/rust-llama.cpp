@@ -20,7 +20,7 @@ typedef struct LlamaCppSimple LlamaCppSimple;
 #endif
 
 // C-compatible function declarations
-LlamaCppSimple* llama_create(const char* model_path, int context, int gpu_layers, int threads, int seed);
+LlamaCppSimple* llama_create(const char* model_path, int context, int gpu_layers, int threads, int seed, int batch);
 void llama_destroy(LlamaCppSimple* instance);
 void* llama_get_context(LlamaCppSimple* instance);
 int llama_generate_text(LlamaCppSimple* instance, const char* prompt, int total_tokens);
