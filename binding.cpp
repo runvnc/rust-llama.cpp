@@ -13,8 +13,8 @@ extern "C" {
 
 class LlamaCppSimple {
   public:
-  LlamaCppSimple(const std::string& path, int context=2048, int gpuLayers=20, int threads=4, int seed=777, int batch=512) :
-    modelPath(path), contextTokenLen(context), randSeed(seed), batchSize(batch)
+  LlamaCppSimple(const std::string& path, int context=2048, int gpuLayers=20, int threads=4, int seed=777, int batch_size=512) :
+    modelPath(path), contextTokenLen(context), randSeed(seed), batchSize(batch_size)
   {
     llama_backend_init(gptParams.numa);
     loadModel(gpuLayers, threads);
@@ -28,10 +28,9 @@ class LlamaCppSimple {
   int generateText(const std::string& prompt, int maxNewTokens) {
     initContext();
  
-    llama_batch batch;
     fprintf(stderr, "top of generateText\n");
     
-    int promptTokenCount = processPrompt(prompt, maxNewTokens, batch);
+    int promptTokenCount = processPrompt(prompt, maxNewTokens);
     int totalTokens = promptTokenCount + maxNewTokens;
 
     if (totalTokens > contextTokenLen) {
@@ -49,7 +48,7 @@ class LlamaCppSimple {
 
     do {
       fprintf(stderr, "2\n");
-      selectedToken = bestFromLastDecode(batch);
+      selectedToken = bestFromLastDecode();
       fprintf(stderr, "3\n");
   
       predictedEnd = (selectedToken == endOfSequence);
@@ -112,6 +111,7 @@ class LlamaCppSimple {
         fprintf(stderr , "%s: error: failed to create the llama_context\n" , __func__);
         throw std::runtime_error("Failed to create the llama_context");
     }
+    batch = llama_batch_init(batchSize, 0, 1);
   }
 
   inline void tokenize(const std::string& inputString, int totalTokens, std::vector<llama_token>& tokens_list) {
@@ -138,12 +138,9 @@ class LlamaCppSimple {
     }
   }
 
-  inline int processPrompt(const std::string& prompt, int maxNewTokens, llama_batch& batch) {
+  inline int processPrompt(const std::string& prompt, int maxNewTokens) {
     std::vector<llama_token> promptTokens;
     tokenize(prompt, contextTokenLen, promptTokens);
-
-    //fprintf(stderr, "a\n");
-    //outputTokensAsString(promptTokens);
 
     fprintf(stderr, "c\n");
     fprintf(stderr, "Prompt tokens len: %d\n", promptTokens.size());
@@ -155,8 +152,9 @@ class LlamaCppSimple {
 
     while (processedTokens < promptTokens.size() ) {
       int start = processedTokens;
-      batch = llama_batch_init(batchSize, 0, 1);
-
+      if (processedTokens > 1) {
+        llama_batch_free(batch);
+      }
       while (processedTokens < start + batchSize && 
           processedTokens < promptTokens.size() ) { 
           llama_batch_add(batch, promptTokens[processedTokens], processedTokens-start, { 0 }, false);
@@ -180,7 +178,7 @@ class LlamaCppSimple {
     return promptTokens.size();
   }
 
-  inline llama_token bestFromLastDecode(llama_batch& batch) {
+  inline llama_token bestFromLastDecode() {
     int numTokensInVocabulary = llama_n_vocab(model);
     auto* tokenLikelihoodScores  = llama_get_logits_ith(currentContext, batch.n_tokens - 1);
 
@@ -198,24 +196,20 @@ class LlamaCppSimple {
     return highestScoringToken;
   }
 
-  inline void decodeToNextTokenScores(llama_batch& batch) {
-    //if (llama_decode(ctx, llama_batch_get_one(&embd[i], n_eval, n_past, 0))) {
-    //    LOG_TEE("%s : failed to eval\n", __func__);
- 
-
+  inline void decodeToNextTokenScores() {
     // evaluate the current batch with the transformer model
     if (llama_decode(currentContext, batch)) {
         fprintf(stderr, "%s : failed to eval, return code %d\n", __func__, 1);
         throw std::runtime_error("Error 1313: input exceeded context length.");
     }
   }
-
  
   llama_model* model;
   llama_model_params modelParams;
   gpt_params gptParams;
   std::string modelPath;
   llama_context* currentContext;
+  llama_batch batch;
   int contextTokenLen, randSeed, batchSize;
 };
 
