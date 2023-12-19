@@ -18,7 +18,7 @@ class LlamaCppSimple {
   {
     llama_backend_init(gptParams.numa);
     loadModel(gpuLayers, threads);
-    initContext();
+    //initContext();
     batch = llama_batch_init(batchSize, 0, 1); 
   }
 
@@ -27,7 +27,7 @@ class LlamaCppSimple {
   }
 
   int generateText(const std::string& prompt, int maxNewTokens) {
-    //initContext();
+    initContext();
     llama_batch_clear(batch);
 
     fprintf(stderr, "top of generateText\n");
