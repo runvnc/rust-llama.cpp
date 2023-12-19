@@ -164,8 +164,8 @@ class LlamaCppSimple {
       }
       fprintf(stderr, "processed tokens: %d", processedTokens);
 
-      if (processedTokens == promptTokens.size() {      
-      fprintf(stderr, "d\n");
+      if (processedTokens == promptTokens.size()) {
+        fprintf(stderr, "d\n");
         // llama_decode will output logits only for the last token of the prompt
         batch.logits[batch.n_tokens - 1] = true;
       }
