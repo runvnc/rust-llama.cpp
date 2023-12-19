@@ -113,7 +113,7 @@ class LlamaCppSimple {
         fprintf(stderr , "%s: error: failed to create the llama_context\n" , __func__);
         throw std::runtime_error("Failed to create the llama_context");
     }
-    *batch = llama_batch_init(batchSize, 0, 1);
+    batch = *llama_batch_init(batchSize, 0, 1);
   }
 
   inline void tokenize(const std::string& inputString, int totalTokens, std::vector<llama_token>& tokens_list) {
