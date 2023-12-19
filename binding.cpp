@@ -19,7 +19,6 @@ class LlamaCppSimple {
     llama_backend_init(gptParams.numa);
     loadModel(gpuLayers, threads);
     //initContext();
-    batch = llama_batch_init(batchSize, 0, 1); 
   }
 
   llama_context* getContext() {
@@ -28,9 +27,6 @@ class LlamaCppSimple {
 
   int generateText(const std::string& prompt, int maxNewTokens) {
     initContext();
-    for (int i = 0; i < batch.n_tokens; i++) {
-
-    }
     llama_batch_clear(batch);
 
     fprintf(stderr, "top of generateText\n");
@@ -117,6 +113,7 @@ class LlamaCppSimple {
         fprintf(stderr , "%s: error: failed to create the llama_context\n" , __func__);
         throw std::runtime_error("Failed to create the llama_context");
     }
+    *batch = llama_batch_init(batchSize, 0, 1);
   }
 
   inline void tokenize(const std::string& inputString, int totalTokens, std::vector<llama_token>& tokens_list) {
