@@ -18,7 +18,7 @@ class LlamaCppSimple {
   {
     llama_backend_init(gptParams.numa);
     loadModel(gpuLayers, threads);
-    initContext();
+    //initContext();
  }
 
   llama_context* getContext() {
@@ -26,7 +26,7 @@ class LlamaCppSimple {
   }
 
   int generateText(const std::string& prompt, int maxNewTokens) {
-    //initContext();
+    initContext();
  
     llama_batch batch;
     fprintf(stderr, "top of generateText\n");
@@ -151,14 +151,13 @@ class LlamaCppSimple {
     fprintf(stderr, "Batch size: %d\n", batchSize);
 
     int processedTokens = 0;
-
+    fprintf(stderr, "init batch\n");
+    batch = llama_batch_init(batchSize, 0, 1);
+ 
     while (processedTokens < promptTokens.size() ) {
-      fprintf(stderr, "init batch\n");
-      batch = llama_batch_init(batchSize, 0, 1);
       int start = processedTokens;
-
+      llama_batch_clear(batch);
       while (processedTokens < start + batchSize && 
-
           processedTokens < promptTokens.size() ) { 
           llama_batch_add(batch, promptTokens[processedTokens], processedTokens-start, { 0 }, false);
           processedTokens++;
@@ -174,7 +173,6 @@ class LlamaCppSimple {
           LOG_TEE("%s: llama_decode() failed\n", __func__);
           throw std::runtime_error("llama_decode() failed");
       }
-      
     }
 
     fprintf(stderr, "f\n");
