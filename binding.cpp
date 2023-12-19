@@ -58,18 +58,21 @@ class LlamaCppSimple {
       predictedEnd = (selectedToken == endOfSequence);
       if (!predictedEnd) {
         fprintf(stderr, "4\n");
- 
-        outputSingleTokenAsString(selectedToken);
- 
         llama_batch_clear(batch);
-        llama_batch_add(batch, selectedToken, currentTokenIndex, { 0 }, true);
-  
+ 
+        const char* str = outputSingleTokenAsString(selectedToken);
+        llama_batch_add(batch, selectedToken, currentTokenIndex++, { 0 }, true);
+ 
+        if (strlen(str) > 0) {
+          addStringToBatch(str, currentTokenIndex);
+        }
+
         decodeToNextTokenScores();
         fprintf(stderr, "5\n");
       } else {
         fprintf(stderr, "predicted EOS\n");
       }
-      currentTokenIndex++;
+      
     } while (!predictedEnd && currentTokenIndex < totalTokens);
 
     return currentTokenIndex;
@@ -85,6 +88,14 @@ class LlamaCppSimple {
   }
  
   private:
+
+  void addStringToBatch(const char* str, int currentTokenIndex) {
+    std::vector<llama_token> tokens;
+    tokenize(str, contextTokenLen, tokens);
+    for (int i = 0; i < tokens.size(); i++) {
+      llama_batch_add(batch, tokens[i], currentTokenIndex++, { 0 }, true);
+    }
+  }
 
   void loadModel(int gpuLayers, int threads) {
     gptParams.model = modelPath;
@@ -130,9 +141,10 @@ class LlamaCppSimple {
     }
   }
 
-  inline void outputSingleTokenAsString(llama_token& token) {
+  inline const char* outputSingleTokenAsString(llama_token& token) {
     const char* str = llama_token_to_piece(currentContext, token).c_str();
-    tokenCallback((void*)10000, (char*)str);
+    const char* result = tokenCallback((void*)10000, (char*)str);
+    return result
   }
 
   inline void outputTokensAsString(const std::vector<llama_token>& tokens) {
