@@ -18,6 +18,7 @@ class LlamaCppSimple {
   {
     llama_backend_init(gptParams.numa);
     loadModel(gpuLayers, threads);
+    batch = llama_batch_init(batchSize, 0, 1);
     //initContext();
   }
 
@@ -27,10 +28,11 @@ class LlamaCppSimple {
 
   int generateText(const std::string& prompt, int maxNewTokens) {
     initContext();
-    llama_batch_clear(batch);
 
     fprintf(stderr, "top of generateText\n");
-    
+   
+    llama_batch_clear(batch);
+
     int promptTokenCount = processPrompt(prompt, maxNewTokens);
     int totalTokens = promptTokenCount + maxNewTokens;
 
@@ -40,8 +42,9 @@ class LlamaCppSimple {
     }
 
     llama_token selectedToken = 0;
-    int currentTokenIndex = batch.n_tokens;
- 
+    //int currentTokenIndex = batch.n_tokens;
+    int currentTokenIndex = promptTokenCount;
+
     llama_token endOfSequence = llama_token_eos(model);
     bool predictedEnd = false;
 
@@ -68,7 +71,7 @@ class LlamaCppSimple {
       }
       currentTokenIndex++;
     } while (!predictedEnd && currentTokenIndex < totalTokens);
- 
+
     return currentTokenIndex;
   }
 
@@ -113,7 +116,6 @@ class LlamaCppSimple {
         fprintf(stderr , "%s: error: failed to create the llama_context\n" , __func__);
         throw std::runtime_error("Failed to create the llama_context");
     }
-    batch = *llama_batch_init(batchSize, 0, 1);
   }
 
   inline void tokenize(const std::string& inputString, int totalTokens, std::vector<llama_token>& tokens_list) {
@@ -158,7 +160,8 @@ class LlamaCppSimple {
 
       while (processedTokens < start + batchSize && 
           processedTokens < promptTokens.size() ) { 
-          llama_batch_add(batch, promptTokens[processedTokens], processedTokens-start, { 0 }, false);
+          //llama_batch_add(batch, promptTokens[processedTokens], processedTokens-start, { 0 }, false);
+          llama_batch_add(batch, promptTokens[processedTokens], processedTokens, { 0 }, false);
           processedTokens++;
       }
       fprintf(stderr, "processed tokens: %d", processedTokens);
