@@ -64,7 +64,8 @@ class LlamaCppSimple {
   
         decodeToNextTokenScores();
         fprintf(stderr, "5\n");
- 
+      } else {
+        fprintf(stderr, "predicted EOS\n");
       }
       currentTokenIndex++;
     } while (!predictedEnd && currentTokenIndex < totalTokens);
@@ -149,7 +150,6 @@ class LlamaCppSimple {
     fprintf(stderr, "Batch size: %d\n", batchSize);
 
     int processedTokens = 0;
-    fprintf(stderr, "init batch\n");
 
     while (processedTokens < promptTokens.size() ) {
       int start = processedTokens;
@@ -178,20 +178,24 @@ class LlamaCppSimple {
   }
 
   inline llama_token bestFromLastDecode() {
+    fprintf(stderr, "b1\n");
+
     int numTokensInVocabulary = llama_n_vocab(model);
     auto* tokenLikelihoodScores  = llama_get_logits_ith(currentContext, batch.n_tokens - 1);
+    fprintf(stderr, "b2\n");
 
     std::vector<llama_token_data> candidates;
     candidates.reserve(numTokensInVocabulary);
-
+  
     for (llama_token token_id = 0; token_id < numTokensInVocabulary; token_id++) {
         candidates.emplace_back(llama_token_data{ token_id, tokenLikelihoodScores[token_id], 0.0f });
     }
+    fprintf(stderr, "b3\n");
 
     llama_token_data_array candidates_p = { candidates.data(), candidates.size(), false };
-
+    
     const llama_token highestScoringToken = llama_sample_token_greedy(currentContext, &candidates_p);
-
+    fprintf(stderr, "b4\n");
     return highestScoringToken;
   }
 
