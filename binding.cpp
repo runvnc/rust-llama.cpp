@@ -162,7 +162,7 @@ class LlamaCppSimple {
           llama_batch_add(batch, promptTokens[processedTokens], processedTokens-start, { 0 }, false);
           processedTokens++;
       }
-      fprintf("processed tokens: %d", processedTokens);
+      fprintf(stderr, "processed tokens: %d", processedTokens);
 
       fprintf(stderr, "d\n");
       // llama_decode will output logits only for the last token of the prompt
