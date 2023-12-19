@@ -153,6 +153,9 @@ class LlamaCppSimple {
 
     while (processedTokens < promptTokens.size() ) {
       int start = processedTokens;
+      
+      llama_batch_clear(batch);
+
       while (processedTokens < start + batchSize && 
           processedTokens < promptTokens.size() ) { 
           llama_batch_add(batch, promptTokens[processedTokens], processedTokens-start, { 0 }, false);
@@ -170,7 +173,6 @@ class LlamaCppSimple {
           LOG_TEE("%s: llama_decode() failed\n", __func__);
           throw std::runtime_error("llama_decode() failed");
       }
-      llama_batch_clear(batch);
     }
 
     fprintf(stderr, "f\n");
