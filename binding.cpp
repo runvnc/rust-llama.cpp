@@ -19,7 +19,8 @@ class LlamaCppSimple {
     llama_backend_init(gptParams.numa);
     loadModel(gpuLayers, threads);
     //initContext();
- }
+    batch = llama_batch_init(batchSize, 0, 1); 
+  }
 
   llama_context* getContext() {
     return currentContext;
@@ -27,7 +28,8 @@ class LlamaCppSimple {
 
   int generateText(const std::string& prompt, int maxNewTokens) {
     initContext();
- 
+    llama_batch_clear(batch);
+
     fprintf(stderr, "top of generateText\n");
     
     int promptTokenCount = processPrompt(prompt, maxNewTokens);
@@ -60,21 +62,21 @@ class LlamaCppSimple {
         llama_batch_clear(batch);
         llama_batch_add(batch, selectedToken, currentTokenIndex, { 0 }, true);
   
-        decodeToNextTokenScores(batch);
+        decodeToNextTokenScores();
         fprintf(stderr, "5\n");
  
       }
       currentTokenIndex++;
     } while (!predictedEnd && currentTokenIndex < totalTokens);
  
-    llama_batch_free(batch);
-
     return currentTokenIndex;
   }
 
   ~LlamaCppSimple() {
     llama_free(currentContext);
     llama_free_model(model);
+
+    llama_batch_free(batch);
 
     llama_backend_free();
   }
@@ -111,7 +113,6 @@ class LlamaCppSimple {
         fprintf(stderr , "%s: error: failed to create the llama_context\n" , __func__);
         throw std::runtime_error("Failed to create the llama_context");
     }
-    batch = llama_batch_init(batchSize, 0, 1);
   }
 
   inline void tokenize(const std::string& inputString, int totalTokens, std::vector<llama_token>& tokens_list) {
@@ -152,9 +153,6 @@ class LlamaCppSimple {
 
     while (processedTokens < promptTokens.size() ) {
       int start = processedTokens;
-      if (processedTokens > 1) {
-        llama_batch_free(batch);
-      }
       while (processedTokens < start + batchSize && 
           processedTokens < promptTokens.size() ) { 
           llama_batch_add(batch, promptTokens[processedTokens], processedTokens-start, { 0 }, false);
@@ -172,6 +170,7 @@ class LlamaCppSimple {
           LOG_TEE("%s: llama_decode() failed\n", __func__);
           throw std::runtime_error("llama_decode() failed");
       }
+      llama_batch_clear(batch);
     }
 
     fprintf(stderr, "f\n");
