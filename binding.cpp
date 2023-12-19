@@ -28,6 +28,9 @@ class LlamaCppSimple {
 
   int generateText(const std::string& prompt, int maxNewTokens) {
     initContext();
+    for (int i = 0; i < batch.n_tokens; i++) {
+
+    }
     llama_batch_clear(batch);
 
     fprintf(stderr, "top of generateText\n");
