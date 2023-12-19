@@ -155,7 +155,7 @@ class LlamaCppSimple {
       batch = llama_batch_init(batchSize, 0, 1);
       int start = processedTokens;
 
-      while (processedTokens < processedTokens + batchSize && 
+      while (processedTokens < start + batchSize && 
           processedTokens < promptTokens.size() ) { 
           llama_batch_add(batch, promptTokens[processedTokens], processedTokens-start, { 0 }, false);
           processedTokens++;
