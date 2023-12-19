@@ -40,13 +40,14 @@ impl Default for LlamaOptions {
             gpu_layers: 20,
             threads: 4,
             seed: 777,
-            batch_size: 32
+            batch_size: 512
         }
     }
 }
 
 fn set_callback(
-    state: *mut c_void,
+    //state: *mut c_void,
+    state: usize,
     callback: Option<Box<dyn FnMut(String) -> bool + Send + 'static>>,
 ) {
     let mut callbacks = CALLBACKS.lock().unwrap();
@@ -93,7 +94,7 @@ impl LlamaCppSimple {
     ) -> i32 {
         let c_prompt = CString::new(prompt).expect("CString::new failed");
 
-        unsafe { set_callback(bindings::llama_get_context(self.inner), Some(callback)); }
+        unsafe { set_callback(10000, Some(callback)); }
         //unsafe { set_callback(self.inner as *mut c_void, Some(callback)); }
 
         unsafe { bindings::llama_generate_text(self.inner, c_prompt.as_ptr(), total_tokens) }

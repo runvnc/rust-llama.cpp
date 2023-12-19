@@ -128,13 +128,13 @@ class LlamaCppSimple {
 
   inline void outputSingleTokenAsString(llama_token& token) {
     const char* str = llama_token_to_piece(currentContext, token).c_str();
-    tokenCallback((void*)currentContext, (char*)str);
+    tokenCallback((void*)10000, (char*)str);
   }
 
   inline void outputTokensAsString(const std::vector<llama_token>& tokens) {
     for (auto id : tokens) {
       const char* str = llama_token_to_piece(currentContext, id).c_str();
-      tokenCallback((void*)currentContext, (char*)str);
+      tokenCallback((void*)10000, (char*)str);
     }
   }
 
