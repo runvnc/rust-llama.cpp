@@ -9,7 +9,7 @@ mod bindings {
 }
 
 lazy_static! {
-    static ref CALLBACKS: Mutex<HashMap<usize, Box<dyn FnMut(String) -> bool + Send + 'static>>> =
+    static ref CALLBACKS: Mutex<HashMap<usize, Box<dyn FnMut(String) -> String + Send + 'static>>> =
         Mutex::new(HashMap::new());
 }
 
@@ -48,7 +48,7 @@ impl Default for LlamaOptions {
 fn set_callback(
     //state: *mut c_void,
     state: usize,
-    callback: Option<Box<dyn FnMut(String) -> bool + Send + 'static>>,
+    callback: Option<Box<dyn FnMut(String) -> String + Send + 'static>>,
 ) {
     let mut callbacks = CALLBACKS.lock().unwrap();
 
@@ -90,7 +90,7 @@ impl LlamaCppSimple {
         &self,
         prompt: &str,
         total_tokens: i32,
-        callback: Box<dyn FnMut(String) -> bool + Send + 'static>,
+        callback: Box<dyn FnMut(String) -> String + Send + 'static>,
     ) -> i32 {
         let c_prompt = CString::new(prompt).expect("CString::new failed");
 
@@ -110,18 +110,18 @@ impl Drop for LlamaCppSimple {
 }
 
 #[no_mangle]
-extern "C" fn tokenCallback(state: *mut c_void, token: *const c_char) -> bool {
+extern "C" fn tokenCallback(state: *mut c_void, token: *const c_char) -> String {
     let mut callbacks = CALLBACKS.lock().unwrap();
     if let Some(callback) = callbacks.get_mut(&(state as usize)) {
         let c_str: &CStr = unsafe { CStr::from_ptr(token) };
         let str_slice: &str = c_str.to_str().unwrap();
         let string: String = str_slice.to_owned();
-        return callback(string);
+        let result = callback(string);
+        return result;
     } else {
         println!("Could not find callback");
 
-    }
-
-    true
+    };
+    "".to_string()
 }
 
