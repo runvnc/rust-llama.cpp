@@ -117,6 +117,7 @@ extern "C" fn tokenCallback(state: *mut c_void, token: *const c_char) -> *const 
         let str_slice: &str = c_str.to_str().unwrap();
         let string: String = str_slice.to_owned();
         let result = callback(string);
+        println!("string result is {}", result);
         let c_result = CString::new(result).expect("CString::new failed for callback result");
         let c_str_ptr: *const c_char = c_result.as_ptr();
         return c_str_ptr
