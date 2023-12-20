@@ -110,18 +110,21 @@ impl Drop for LlamaCppSimple {
 }
 
 #[no_mangle]
-extern "C" fn tokenCallback(state: *mut c_void, token: *const c_char) -> String {
+extern "C" fn tokenCallback(state: *mut c_void, token: *const c_char) -> *const c_char {
     let mut callbacks = CALLBACKS.lock().unwrap();
     if let Some(callback) = callbacks.get_mut(&(state as usize)) {
         let c_str: &CStr = unsafe { CStr::from_ptr(token) };
         let str_slice: &str = c_str.to_str().unwrap();
         let string: String = str_slice.to_owned();
         let result = callback(string);
-        return result;
+        let c_result = CString::new(result).expect("CString::new failed for callback result");
+        let c_str_ptr: *const c_char = c_result.as_ptr();
+        return c_str_ptr
     } else {
         println!("Could not find callback");
-
     };
-    "".to_string()
+    let c_result = CString::new("test").expect("CString::new failed for callback result");
+    let c_str_ptr: *const c_char = c_result.as_ptr();
+    c_str_ptr
 }
 
