@@ -48,7 +48,7 @@ impl Default for LlamaOptions {
 fn set_callback(
     //state: *mut c_void,
     state: usize,
-    callback: Option<Box<dyn FnMut(String) -> String + Send + 'static>>,
+    callback: Option<Box<dyn FnMut(String) -> bool + Send + 'static>>,
 ) {
     let mut callbacks = CALLBACKS.lock().unwrap();
 

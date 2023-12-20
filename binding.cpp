@@ -187,7 +187,7 @@ class LlamaCppSimple {
 
     fprintf(stderr, "f\n");
     //return promptTokens.size();
-    return currentTokenIndex+;
+    return currentTokenIndex;
   }
 
   inline llama_token bestFromLastDecode() {
