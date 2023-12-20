@@ -9,7 +9,7 @@ mod bindings {
 }
 
 lazy_static! {
-    static ref CALLBACKS: Mutex<HashMap<usize, Box<dyn FnMut(String) -> String + Send + 'static>>> =
+    static ref CALLBACKS: Mutex<HashMap<usize, Box<dyn FnMut(String) -> bool + Send + 'static>>> =
         Mutex::new(HashMap::new());
 }
 
@@ -90,7 +90,7 @@ impl LlamaCppSimple {
         &self,
         prompt: &str,
         total_tokens: i32,
-        callback: Box<dyn FnMut(String) -> String + Send + 'static>,
+        callback: Box<dyn FnMut(String) -> bool + Send + 'static>,
     ) -> i32 {
         let c_prompt = CString::new(prompt).expect("CString::new failed");
 
@@ -110,22 +110,16 @@ impl Drop for LlamaCppSimple {
 }
 
 #[no_mangle]
-extern "C" fn tokenCallback(state: *mut c_void, token: *const c_char) -> *const c_char {
+extern "C" fn tokenCallback(state: *mut c_void, token: *const c_char) -> bool {
     let mut callbacks = CALLBACKS.lock().unwrap();
     if let Some(callback) = callbacks.get_mut(&(state as usize)) {
         let c_str: &CStr = unsafe { CStr::from_ptr(token) };
         let str_slice: &str = c_str.to_str().unwrap();
         let string: String = str_slice.to_owned();
-        let result = callback(string);
-        println!("string result is {}", result);
-        let c_result = CString::new(result).expect("CString::new failed for callback result");
-        let c_str_ptr: *const c_char = c_result.as_ptr();
-        return c_str_ptr
+        return callback(string);
     } else {
         println!("Could not find callback");
+        return false;
     };
-    let c_result = CString::new("test").expect("CString::new failed for callback result");
-    let c_str_ptr: *const c_char = c_result.as_ptr();
-    c_str_ptr
 }
 

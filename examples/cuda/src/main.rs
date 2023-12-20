@@ -37,8 +37,7 @@ fn main() {
 
         let mut answer = answer_clone.lock().unwrap();
         answer.push_str(&token_str);
-        "french fries".to_string()
-        //"".to_string()
+        true
     }));
 
     println!("Done.");
@@ -49,7 +48,6 @@ fn main() {
     println!();
     println!();
     println!();
-
 
     let prompt2_ = (&*final_answer).to_string() + "<|im_end|>\n<|im_start|>user\nGive me a list of the key points of your first answer.<|im_end|>\n<|im_start|>assistant";
     let prompt2 = "<|im_start|>assistant\nThere are different ways to determine if a restaurant is popular among locals or mainly attracts tourists, and one possible reason why this information might be useful is to avoid overpriced or low-quality food. Here are some possible steps to find this information:\n\n- Look for online reviews from locals or travel blogs that mention the restaurant and its food, service, and atmosphere. These can give you an idea of how the restaurant is perceived by the local community and what they like or dislike about it.\n- Check the restaurant's website or social media pages for any information about their target audience, location, or specialties. These can indicate whether the<|im_end|>\n<|im_start|>user\nGive me a list of the key points of your first answer.<|im_end|>\n<|im_start|>assistant";
@@ -66,10 +64,8 @@ fn main() {
     let result2 = llama.generate_text(prompt2_.as_str(), 256, Box::new(move |token| {
         print!("{}", token);
         io::stdout().flush().unwrap();
-        "".to_string()
+        false
     }));
-
-    //assert!(!generated_text.is_empty());
 }
 
 
