@@ -144,7 +144,7 @@ class LlamaCppSimple {
   inline const char* outputSingleTokenAsString(llama_token& token) {
     const char* str = llama_token_to_piece(currentContext, token).c_str();
     const char* result = tokenCallback((void*)10000, (char*)str);
-    return result
+    return result;
   }
 
   inline void outputTokensAsString(const std::vector<llama_token>& tokens) {

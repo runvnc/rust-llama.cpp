@@ -37,7 +37,7 @@ fn main() {
 
         let mut answer = answer_clone.lock().unwrap();
         answer.push_str(&token_str);
-        "french fries"
+        "french fries".to_string()
     }));
 
     println!("Done.");
@@ -65,7 +65,7 @@ fn main() {
     let result2 = llama.generate_text(prompt2_.as_str(), 256, Box::new(move |token| {
         print!("{}", token);
         io::stdout().flush().unwrap();
-        ""
+        "".to_string()
     }));
 
     //assert!(!generated_text.is_empty());
