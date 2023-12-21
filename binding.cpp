@@ -35,7 +35,7 @@ class LlamaCppSimple {
     llama_batch_clear(batch);
 
     int promptTokenCount = processPrompt(prompt, maxNewTokens);
-    //int currentTokenIndex = promptTokenCount;
+    currentTokenIndex = promptTokenCount;
 
     int totalTokens = promptTokenCount + maxNewTokens;
 
