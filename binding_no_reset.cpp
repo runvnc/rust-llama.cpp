@@ -20,6 +20,7 @@ class LlamaCppSimple {
     loadModel(gpuLayers, threads);
     batch = llama_batch_init(batchSize, 0, 1);
     currentTokenIndex = 0;
+    initContext();
   }
 
   llama_context* getContext() {
@@ -27,15 +28,12 @@ class LlamaCppSimple {
   }
 
   int generateText(const std::string& prompt, int maxNewTokens) {
-    initContext();
-    currentTokenIndex = 0;
-
     fprintf(stderr, "top of generateText\n");
    
     llama_batch_clear(batch);
 
     int promptTokenCount = processPrompt(prompt, maxNewTokens);
-    //int currentTokenIndex = promptTokenCount;
+    int currentTokenIndex = promptTokenCount;
 
     int totalTokens = promptTokenCount + maxNewTokens;
 
@@ -168,10 +166,10 @@ class LlamaCppSimple {
 
       while (processedTokens < start + batchSize && 
           processedTokens < promptTokens.size() ) { 
-          llama_batch_add(batch, promptTokens[processedTokens], processedTokens, { 0 }, false);
-          //llama_batch_add(batch, promptTokens[processedTokens], currentTokenIndex, { 0 }, false); 
+          //llama_batch_add(batch, promptTokens[processedTokens], processedTokens, { 0 }, false);
+          llama_batch_add(batch, promptTokens[processedTokens], currentTokenIndex, { 0 }, false); 
           processedTokens++;
-          //currentTokenIndex++;
+          currentTokenIndex++;
       }
       fprintf(stderr, "processed tokens: %d", processedTokens);
 
@@ -188,8 +186,8 @@ class LlamaCppSimple {
     }
 
     fprintf(stderr, "f\n");
-    return promptTokens.size();
-    //return currentTokenIndex;
+    //return promptTokens.size();
+    return currentTokenIndex;
   }
 
   inline llama_token bestFromLastDecode() {
