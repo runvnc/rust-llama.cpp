@@ -113,6 +113,9 @@ class LlamaCppSimple {
     ctx_params.n_threads = gptParams.n_threads;
     ctx_params.n_threads_batch = gptParams.n_threads_batch == -1 ? gptParams.n_threads : gptParams.n_threads_batch;
 
+    if (currentContext != 0) {
+      llama_free(currentContext);
+    }
     currentContext = llama_new_context_with_model(model, ctx_params);
 
     if (currentContext == NULL) {
@@ -122,7 +125,18 @@ class LlamaCppSimple {
   }
 
   inline void tokenize(const std::string& inputString, int totalTokens, std::vector<llama_token>& tokens_list) {
-    tokens_list = llama_tokenize(currentContext, inputString, true);
+    tokens_list = llama_tokenize(model, inputString, true);
+    llama_token endOfSequence = llama_token_eos(model);
+    
+    fprintf(stderr, "EOS is %d\n", endOfSequence);
+    for (int i = 0; i < tokens_list.size(); i++) {
+      const char* str = llama_token_to_piece(currentContext, token).c_str();
+      fprintf(stderr, "%s", str);
+
+      if (tokens_list[i] == endOfSequence) {
+        fprintf(stderr, " *Found EOS* ");
+      }
+    }
 
     const int n_ctx    = llama_n_ctx(currentContext);
     const int n_kv_req = tokens_list.size() + (totalTokens - tokens_list.size());
@@ -227,7 +241,7 @@ class LlamaCppSimple {
   gpt_params gptParams;
   int currentTokenIndex;
   std::string modelPath;
-  llama_context* currentContext;
+  llama_context* currentContext = 0;
   llama_batch batch;
   int contextTokenLen, randSeed, batchSize;
 };
