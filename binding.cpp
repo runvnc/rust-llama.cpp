@@ -124,14 +124,14 @@ class LlamaCppSimple {
     }
   }
 
-  inline void tokenize(const std::string& inputString, int totalTokens, std::vector<llama_token>& tokens_list) {
-    tokens_list = llama_tokenize(model, inputString, true);
+  inline void tokenize(const std::string& inputString, int totalTokens, std::vector<llama_token>& tokens_list, bool is_start) {
+    tokens_list = llama_tokenize(model, inputString, is_start, true);
     llama_token endOfSequence = llama_token_eos(model);
     
     fprintf(stderr, "EOS is %d\ntokenize result:\n", endOfSequence);
     for (int i = 0; i < tokens_list.size(); i++) {
       const char* str = llama_token_to_piece(currentContext, tokens_list[i]).c_str();
-      fprintf(stderr, "%s", str);
+      fprintf(stderr, " {%s}[%d] ", str, tokens_list[i]);
 
       if (tokens_list[i] == endOfSequence) {
         fprintf(stderr, " *Found EOS* ");
@@ -167,7 +167,7 @@ class LlamaCppSimple {
     // TODO: verify that we don't overrun context length 
 
     std::vector<llama_token> promptTokens;
-    tokenize(prompt, contextTokenLen, promptTokens);
+    tokenize(prompt, contextTokenLen, promptTokens, true);
 
     fprintf(stderr, "c\n");
     fprintf(stderr, "Prompt tokens len: %d\n", promptTokens.size());
