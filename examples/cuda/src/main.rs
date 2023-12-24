@@ -32,9 +32,6 @@ fn main() {
     println!("Start.");
 
     let result = llama.generate_text(prompt.as_str(), total_tokens, Box::new(move |token_str| {
-        print!("[{}]", token_str);
-        io::stdout().flush().unwrap();
-
         let mut answer = answer_clone.lock().unwrap();
         answer.push_str(&token_str);
         true

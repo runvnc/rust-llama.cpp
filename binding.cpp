@@ -182,28 +182,23 @@ class LlamaCppSimple {
       fprintf(stderr, "processed tokens: %d", processedTokens);
 
       if (processedTokens == promptTokens.size()) {
-        fprintf(stderr, "d\n");
         // llama_decode will output logits only for the last token of the prompt
         batch.logits[batch.n_tokens - 1] = true;
       }
-      fprintf(stderr, "e\n");
       if (llama_decode(currentContext, batch) != 0) {
           LOG_TEE("%s: llama_decode() failed\n", __func__);
           throw std::runtime_error("llama_decode() failed");
       }
     }
 
-    fprintf(stderr, "f\n");
     return promptTokens.size();
     //return currentTokenIndex;
   }
 
   inline llama_token bestFromLastDecode() {
-    fprintf(stderr, "b1\n");
 
     int numTokensInVocabulary = llama_n_vocab(model);
     auto* tokenLikelihoodScores  = llama_get_logits_ith(currentContext, batch.n_tokens - 1);
-    fprintf(stderr, "b2\n");
 
     std::vector<llama_token_data> candidates;
     candidates.reserve(numTokensInVocabulary);
@@ -211,12 +206,10 @@ class LlamaCppSimple {
     for (llama_token token_id = 0; token_id < numTokensInVocabulary; token_id++) {
         candidates.emplace_back(llama_token_data{ token_id, tokenLikelihoodScores[token_id], 0.0f });
     }
-    fprintf(stderr, "b3\n");
 
     llama_token_data_array candidates_p = { candidates.data(), candidates.size(), false };
     
     const llama_token highestScoringToken = llama_sample_token_greedy(currentContext, &candidates_p);
-    fprintf(stderr, "b4\n");
     return highestScoringToken;
   }
 
