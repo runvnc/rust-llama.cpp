@@ -30,8 +30,6 @@ class LlamaCppSimple {
     initContext();
     currentTokenIndex = 0;
 
-    fprintf(stderr, "top of generateText\n");
-   
     llama_batch_clear(batch);
 
     int promptTokenCount = processPrompt(prompt, maxNewTokens);
@@ -49,16 +47,11 @@ class LlamaCppSimple {
     llama_token endOfSequence = llama_token_eos(model);
     bool predictedEnd = false;
 
-    fprintf(stderr, "loop begin\n");
-
     do {
-      fprintf(stderr, "2\n");
       selectedToken = bestFromLastDecode();
-      fprintf(stderr, "3\n");
   
       predictedEnd = (selectedToken == endOfSequence);
       if (!predictedEnd) {
-        fprintf(stderr, "4\n");
         llama_batch_clear(batch);
  
         bool should_continue = outputSingleTokenAsString(selectedToken);
@@ -68,9 +61,7 @@ class LlamaCppSimple {
         llama_batch_add(batch, selectedToken, currentTokenIndex++, { 0 }, true);
  
         decodeToNextTokenScores();
-        fprintf(stderr, "5\n");
       } else {
-        fprintf(stderr, "predicted EOS\n");
       }
       
     } while (!predictedEnd && currentTokenIndex < totalTokens);
@@ -128,16 +119,16 @@ class LlamaCppSimple {
     tokens_list = llama_tokenize(model, inputString, is_start, true);
     llama_token endOfSequence = llama_token_eos(model);
     
-    fprintf(stderr, "EOS is %d\ntokenize result:\n", endOfSequence);
+    //fprintf(stderr, "EOS is %d\ntokenize result:\n", endOfSequence);
     for (int i = 0; i < tokens_list.size(); i++) {
       const char* str = llama_token_to_piece(currentContext, tokens_list[i]).c_str();
-      fprintf(stderr, " {%s}[%d] ", str, tokens_list[i]);
+      //fprintf(stderr, " {%s}[%d] ", str, tokens_list[i]);
 
       if (tokens_list[i] == endOfSequence) {
         fprintf(stderr, " *Found EOS* ");
       }
     }
-    fprintf(stderr, "\n");
+    //fprintf(stderr, "\n");
 
     const int n_ctx    = llama_n_ctx(currentContext);
     const int n_kv_req = tokens_list.size() + (totalTokens - tokens_list.size());
