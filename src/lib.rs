@@ -116,7 +116,9 @@ extern "C" fn tokenCallback(state: *mut c_void, token: *const c_char) -> bool {
         let c_str: &CStr = unsafe { CStr::from_ptr(token) };
         let str_slice: &str = c_str.to_str().unwrap();
         let string: String = str_slice.to_owned();
-        return callback(string);
+        let result = callback(string);
+        println!("%%% {:?} %%%", result);
+        return result;
     } else {
         println!("Could not find callback");
         return false;

@@ -55,6 +55,7 @@ class LlamaCppSimple {
         llama_batch_clear(batch);
  
         bool should_continue = outputSingleTokenAsString(selectedToken);
+        fprintf(stderr, " ### %d ### ", should_continue);
 
         if (!should_continue) return currentTokenIndex;
 
